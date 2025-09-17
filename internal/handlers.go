@@ -4,18 +4,17 @@ package internal
 
 import "net/http"
 
-//Пока пустой
 type HTTPHandlers struct {
-	Subscription Subscription
+	subscriptionStore *SubscriptionStore
 }
 
-func NewHTTPHandlers(subscription Subscription) *HTTPHandlers {
+func NewHTTPHandlers(subscriptionStore SubscriptionStore) *HTTPHandlers {
 	return &HTTPHandlers{}
 }
 
 // HandleSubscribe godoc
 // @Summary      Create subscription
-// @Description  Создать новую подписку (service_name, price, user_id, start_date).
+// @Description  Создать новую подписку (service_name,   price, user_id, start_date).
 // @Tags         subscriptions
 // @Accept       json
 // @Produce      json
@@ -26,7 +25,8 @@ func NewHTTPHandlers(subscription Subscription) *HTTPHandlers {
 // @Failure      500  {object} ErrorResponse
 // @Router       /subscriptions [post]
 func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
-
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Server is working fine"))
 }
 
 // HandleGetInfoSubscribe godoc
