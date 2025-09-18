@@ -3,6 +3,7 @@
 package internal
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,10 +12,10 @@ import (
 // Subscription хранит запись о подписке.
 // Все поля с большой буквы для экспорта в JSON.
 type Subscription struct {
-	ServiceName string
-	Price       int
-	UserId      string
-	StartDate   string
+	ServiceName string `json:"service_name"`
+	Price       int    `json:"price"`
+	UserId      string `json:"user_id"`
+	StartDate   string `json:"start_date"`
 }
 
 // SubscriptionStore хранит слайс и мапу объектов Subscription.
@@ -46,16 +47,16 @@ func NewSubMap() SubscriptionStore {
 
 // AddSub используется для добавления нашей подписки в хранилище(Store)
 func (sub *SubscriptionStore) AddSub(subscription Subscription) {
-	sub.MapSub[subscription.ServiceName] = subscription
+	sub.MapSub[subscription.UserId] = subscription
 }
 
-func (sub *SubscriptionStore) GetSubInfo(seviceName string) Subscription {
+func (sub *SubscriptionStore) GetSubInfo(userId string) Subscription {
 	copyMap := make(map[string]Subscription, len(sub.MapSub))
 
 	for k, v := range sub.MapSub {
 		copyMap[k] = v
 	}
-	v, ok := copyMap[seviceName]
+	v, ok := copyMap[userId]
 	if !ok {
 		return Subscription{}
 	}
@@ -74,6 +75,15 @@ func (sub *SubscriptionStore) GetSubAllInfo() map[string]Subscription {
 
 }
 
-func (sub *SubscriptionStore) DeleteInfo(serviceName string) {
-	delete(sub.MapSub, serviceName)
+func (sub *SubscriptionStore) DeleteInfo(userId string) {
+	delete(sub.MapSub, userId)
+}
+
+func (sub *SubscriptionStore) UpdateSub(userId string, newSub Subscription) error {
+	_, ok := sub.MapSub[userId]
+	if !ok {
+		return fmt.Errorf("subscription not found")
+	}
+	sub.MapSub[userId] = newSub
+	return nil
 }
