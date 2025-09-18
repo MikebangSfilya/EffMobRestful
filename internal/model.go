@@ -21,7 +21,7 @@ type Subscription struct {
 // SubscriptionStore хранит слайс и мапу объектов Subscription.
 // Можно использовать для хранения и работы с множеством подписок.
 type SubscriptionStore struct {
-	MapSub map[string]Subscription // key -- Subscription.ServiceName
+	MapSub map[string]Subscription // key -- Subscription.UserId
 }
 
 // NewSubscription создает новый объект Subscription с уникальным UserId и текущей датой старта.
@@ -38,8 +38,8 @@ func NewSubscription(serviceName string, price int) Subscription {
 
 }
 
-// NewSubMap создает пустой контейнер SubscriptionSlice для добавления подписок.
-func NewSubMap() SubscriptionStore {
+// NewSubStore создает пустой контейнер SubscriptionSlice для добавления подписок.
+func NewSubStore() SubscriptionStore {
 	return SubscriptionStore{
 		MapSub: make(map[string]Subscription),
 	}
