@@ -33,6 +33,9 @@ func NewHTTPHandlers(subscriptionStore *SubscriptionStore) *HTTPHandlers {
 // @Failure      500  {object} ErrorResponse
 // @Router       /subscriptions [post]
 func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
 	var DTOSubs DTOSubs
 	if err := json.NewDecoder(r.Body).Decode(&DTOSubs); err != nil {
 		fmt.Println("errors is", err)
@@ -40,7 +43,7 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 
 	subsNew := NewSubscription(DTOSubs.ServiceName, DTOSubs.Price)
 
-	h.subscriptionStore.AddSub(subsNew)
+	h.subscriptionStore.AddSub(ctx, subsNew)
 
 	b, err := json.MarshalIndent(subsNew, "", "	   ")
 	if err != nil {
@@ -66,8 +69,8 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 // @Router       /subscriptions/{id} [get]
 func (h *HTTPHandlers) HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Request) {
 	idSub := mux.Vars(r)["id"]
-
-	subs := h.subscriptionStore.GetSubInfo(idSub)
+	ctx := r.Context()
+	subs, _ := h.subscriptionStore.GetSubInfo(ctx, idSub)
 
 	b, err := json.MarshalIndent(subs, "", "	   ")
 	if err != nil {
@@ -92,7 +95,8 @@ func (h *HTTPHandlers) HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Req
 // @Failure      500  {object} ErrorResponse
 // @Router       /subscriptions [get]
 func (h *HTTPHandlers) HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.Request) {
-	subs := h.subscriptionStore.GetSubAllInfo()
+	ctx := r.Context()
+	subs, _ := h.subscriptionStore.GetSubAllInfo(ctx)
 	b, err := json.MarshalIndent(subs, "", "    ")
 	if err != nil {
 		panic(err)
@@ -118,22 +122,23 @@ func (h *HTTPHandlers) HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.
 // @Router       /subscriptions/{id} [delete]
 func (h *HTTPHandlers) HandleDeleteSubscribe(w http.ResponseWriter, r *http.Request) {
 	idSub := mux.Vars(r)["id"]
-	h.subscriptionStore.DeleteInfo(idSub)
+	ctx := r.Context()
+	h.subscriptionStore.DeleteInfo(ctx, idSub)
 
 	w.WriteHeader(http.StatusNoContent)
 
 }
 
 func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	userId := mux.Vars(r)["id"]
-
 	var dto DTOSubs
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		fmt.Println("failed to decode request body:", err)
 		return
 	}
 
-	oldSub := h.subscriptionStore.GetSubInfo(userId)
+	oldSub, _ := h.subscriptionStore.GetSubInfo(ctx, userId)
 	if (oldSub == Subscription{}) {
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -146,7 +151,7 @@ func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Requ
 		StartDate:   oldSub.StartDate,
 	}
 
-	if err := h.subscriptionStore.UpdateSub(userId, updatedSub); err != nil {
+	if err := h.subscriptionStore.UpdateSub(ctx, userId, updatedSub); err != nil {
 		fmt.Println("failed to update subscription:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

@@ -48,7 +48,7 @@ func NewSubStore(dataBase *pgxpool.Pool) *SubscriptionStore {
 }
 
 // AddSub используется для добавления нашей подписки в хранилище(Store)
-func (sub *SubscriptionStore) AddSub(subscription Subscription) error {
+func (sub *SubscriptionStore) AddSub(ctx context.Context, subscription Subscription) error {
 	query := `
 		INSERT 
 		INTO subscription 
@@ -56,11 +56,11 @@ func (sub *SubscriptionStore) AddSub(subscription Subscription) error {
 		VALUES ($1, $2, $3, $4)
 	`
 
-	_, err := sub.dataBase.Exec(context.Background(), query, subscription.UserId, subscription.ServiceName, subscription.Price, subscription.StartDate)
+	_, err := sub.dataBase.Exec(ctx, query, subscription.UserId, subscription.ServiceName, subscription.Price, subscription.StartDate)
 	return err
 }
 
-func (sub *SubscriptionStore) GetSubInfo(userId string) (Subscription, error) {
+func (sub *SubscriptionStore) GetSubInfo(ctx context.Context, userId string) (Subscription, error) {
 
 	query := `
 	SELECT user_id, service_name, price, start_date 
@@ -69,20 +69,20 @@ func (sub *SubscriptionStore) GetSubInfo(userId string) (Subscription, error) {
 	`
 	var s Subscription
 
-	if err := sub.dataBase.QueryRow(context.Background(), query, userId).Scan(&s.UserId, &s.ServiceName, &s.Price, &s.StartDate); err != nil {
+	if err := sub.dataBase.QueryRow(ctx, query, userId).Scan(&s.UserId, &s.ServiceName, &s.Price, &s.StartDate); err != nil {
 		return Subscription{}, err
 	}
 
 	return s, nil
 }
 
-func (sub *SubscriptionStore) GetSubAllInfo() ([]Subscription, error) {
+func (sub *SubscriptionStore) GetSubAllInfo(ctx context.Context) ([]Subscription, error) {
 
 	query := `
 	SELECT user_id, service_name, price, start_date 
 	FROM subscription 
 	`
-	rows, err := sub.dataBase.Query(context.Background(), query)
+	rows, err := sub.dataBase.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -100,23 +100,23 @@ func (sub *SubscriptionStore) GetSubAllInfo() ([]Subscription, error) {
 }
 
 // Удаление записи из нашей базы данных
-func (sub *SubscriptionStore) DeleteInfo(userId string) error {
+func (sub *SubscriptionStore) DeleteInfo(ctx context.Context, userId string) error {
 	query := `
 	DELETE F
 	ROM subscription 
 	WHERE user_id=$1`
-	_, err := sub.dataBase.Exec(context.Background(), query, userId)
+	_, err := sub.dataBase.Exec(ctx, query, userId)
 	return err
 }
 
 // Обновление информации из базы данных
-func (sub *SubscriptionStore) UpdateSub(userId string, newSub Subscription) error {
+func (sub *SubscriptionStore) UpdateSub(ctx context.Context, userId string, newSub Subscription) error {
 	query := `
 		UPDATE subscription 
 		SET service_name=$1, price=$2, start_date=$3 
 		WHERE user_id=$4
 	`
-	cmd, err := sub.dataBase.Exec(context.Background(), query, newSub.ServiceName, newSub.Price, newSub.StartDate, userId)
+	cmd, err := sub.dataBase.Exec(ctx, query, newSub.ServiceName, newSub.Price, newSub.StartDate, userId)
 	if err != nil {
 		return err
 	}
