@@ -24,6 +24,7 @@ func (s *HTTPServer) StartServer() error {
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleSubscribe).Methods("POST")
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleGetAllInfoSubscribe).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleGetInfoSubscribe).Methods("GET")
+	r.HandleFunc("/subscriptions/sum", s.httpHandlers.HandleSumInfo).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleDeleteSubscribe).Methods("DELETE")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleUpdateSubscribe).Methods("PUT")
 	// r.Path("/subscriptions").Methods("POST").HandlerFunc(s.httpHandlers.HandleSubscribe)

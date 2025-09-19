@@ -14,10 +14,11 @@ import (
 // Subscription хранит запись о подписке.
 // Все поля с большой буквы для экспорта в JSON.
 type Subscription struct {
-	ServiceName string `json:"service_name"`
-	Price       int    `json:"price"`
-	UserId      string `json:"user_id"`
-	StartDate   string `json:"start_date"`
+	ServiceName string  `json:"service_name"`
+	Price       int     `json:"price"`
+	UserId      string  `json:"user_id"`
+	StartDate   string  `json:"start_date"`
+	EndDate     *string `json:"end_date,omitempty"`
 }
 
 // SubscriptionStore хранит слайс и мапу объектов Subscription.
@@ -124,4 +125,21 @@ func (sub *SubscriptionStore) UpdateSub(ctx context.Context, userId string, newS
 		return errors.New("subscription not found")
 	}
 	return nil
+}
+
+func (sub *SubscriptionStore) SumSubscriptions(ctx context.Context, userId, serviceName, from, to string) (int, error) {
+
+	query := `
+        SELECT SUM(price) 
+        FROM subscription
+        WHERE ($1='' OR user_id=$1)
+          AND ($2='' OR service_name=$2)
+          AND start_date >= $3 AND start_date <= $4
+    `
+	var sum int
+
+	err := sub.dataBase.QueryRow(ctx, query, userId, serviceName, from, to).Scan(&sum)
+
+	return sum, err
+
 }
