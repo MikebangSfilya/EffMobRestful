@@ -3,10 +3,12 @@
 package internal
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Subscription хранит запись о подписке.
@@ -21,7 +23,7 @@ type Subscription struct {
 // SubscriptionStore хранит слайс и мапу объектов Subscription.
 // Можно использовать для хранения и работы с множеством подписок.
 type SubscriptionStore struct {
-	MapSub map[string]Subscription // key -- Subscription.UserId
+	dataBase *pgxpool.Pool // база данных
 }
 
 // NewSubscription создает новый объект Subscription с уникальным UserId и текущей датой старта.
@@ -39,51 +41,87 @@ func NewSubscription(serviceName string, price int) Subscription {
 }
 
 // NewSubStore создает пустой контейнер SubscriptionSlice для добавления подписок.
-func NewSubStore() SubscriptionStore {
-	return SubscriptionStore{
-		MapSub: make(map[string]Subscription),
+func NewSubStore(dataBase *pgxpool.Pool) *SubscriptionStore {
+	return &SubscriptionStore{
+		dataBase: dataBase,
 	}
 }
 
 // AddSub используется для добавления нашей подписки в хранилище(Store)
-func (sub *SubscriptionStore) AddSub(subscription Subscription) {
-	sub.MapSub[subscription.UserId] = subscription
+func (sub *SubscriptionStore) AddSub(subscription Subscription) error {
+	query := `
+		INSERT 
+		INTO subscription 
+		(user_id, service_name, price, start_date)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	_, err := sub.dataBase.Exec(context.Background(), query, subscription.UserId, subscription.ServiceName, subscription.Price, subscription.StartDate)
+	return err
 }
 
-func (sub *SubscriptionStore) GetSubInfo(userId string) Subscription {
-	copyMap := make(map[string]Subscription, len(sub.MapSub))
+func (sub *SubscriptionStore) GetSubInfo(userId string) (Subscription, error) {
 
-	for k, v := range sub.MapSub {
-		copyMap[k] = v
+	query := `
+	SELECT user_id, service_name, price, start_date 
+	FROM subscription
+	WHERE user_id=$1
+	`
+	var s Subscription
+
+	if err := sub.dataBase.QueryRow(context.Background(), query, userId).Scan(&s.UserId, &s.ServiceName, &s.Price, &s.StartDate); err != nil {
+		return Subscription{}, err
 	}
-	v, ok := copyMap[userId]
-	if !ok {
-		return Subscription{}
+
+	return s, nil
+}
+
+func (sub *SubscriptionStore) GetSubAllInfo() ([]Subscription, error) {
+
+	query := `
+	SELECT user_id, service_name, price, start_date 
+	FROM subscription 
+	`
+	rows, err := sub.dataBase.Query(context.Background(), query)
+	if err != nil {
+		return nil, err
 	}
-	return v
-}
+	defer rows.Close()
 
-func (sub *SubscriptionStore) GetSubAllInfo() map[string]Subscription {
-
-	copyMap := make(map[string]Subscription, len(sub.MapSub))
-
-	for k, v := range sub.MapSub {
-		copyMap[k] = v
+	var subs []Subscription
+	for rows.Next() {
+		var sub Subscription
+		if err := rows.Scan(&sub.UserId, &sub.ServiceName, &sub.Price, &sub.StartDate); err != nil {
+			return nil, err
+		}
+		subs = append(subs, sub)
 	}
-
-	return copyMap
-
+	return subs, nil
 }
 
-func (sub *SubscriptionStore) DeleteInfo(userId string) {
-	delete(sub.MapSub, userId)
+// Удаление записи из нашей базы данных
+func (sub *SubscriptionStore) DeleteInfo(userId string) error {
+	query := `
+	DELETE F
+	ROM subscription 
+	WHERE user_id=$1`
+	_, err := sub.dataBase.Exec(context.Background(), query, userId)
+	return err
 }
 
+// Обновление информации из базы данных
 func (sub *SubscriptionStore) UpdateSub(userId string, newSub Subscription) error {
-	_, ok := sub.MapSub[userId]
-	if !ok {
-		return fmt.Errorf("subscription not found")
+	query := `
+		UPDATE subscription 
+		SET service_name=$1, price=$2, start_date=$3 
+		WHERE user_id=$4
+	`
+	cmd, err := sub.dataBase.Exec(context.Background(), query, newSub.ServiceName, newSub.Price, newSub.StartDate, userId)
+	if err != nil {
+		return err
 	}
-	sub.MapSub[userId] = newSub
+	if cmd.RowsAffected() == 0 {
+		return errors.New("subscription not found")
+	}
 	return nil
 }
