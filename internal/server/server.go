@@ -1,19 +1,19 @@
-// server.go роутер для реализации RESTfullAPI
-package internal
+package server
 
 import (
 	"fmt"
 	"net/http"
+	"subscription/internal/handlers"
 
 	"github.com/gorilla/mux"
 )
 
 // Структура для работы с нашими хендлерами
 type HTTPServer struct {
-	httpHandlers *HTTPHandlers
+	httpHandlers *handlers.HTTPHandlers
 }
 
-func NewHTTPServer(httpHandlers *HTTPHandlers) *HTTPServer {
+func NewHTTPServer(httpHandlers *handlers.HTTPHandlers) *HTTPServer {
 	return &HTTPServer{
 		httpHandlers: httpHandlers,
 	}

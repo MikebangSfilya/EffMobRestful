@@ -1,5 +1,5 @@
-// DTO для запроса данных
-package internal
+// datatransfer для запроса данных
+package datatransfer
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ type ErrorResponse struct {
 	Code  int    `json:"code"`
 }
 
-func writeError(w http.ResponseWriter, err string, code int) {
+func WriteError(w http.ResponseWriter, err string, code int) {
 	w.WriteHeader(code)
 	resp := ErrorResponse{
 		Error: err,

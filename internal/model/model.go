@@ -1,6 +1,6 @@
 // Package internal хранит внутри себя внутренний пакет для работы всего приложения, неэкспортируемый
 // model.go содержит типы данных которые используются в приложении
-package internal
+package model
 
 import (
 	"context"
@@ -103,8 +103,7 @@ func (sub *SubscriptionStore) GetSubAllInfo(ctx context.Context) ([]Subscription
 // Удаление записи из нашей базы данных
 func (sub *SubscriptionStore) DeleteInfo(ctx context.Context, userId string) error {
 	query := `
-	DELETE F
-	ROM subscription 
+	DELETE FROM subscription 
 	WHERE user_id=$1`
 	_, err := sub.dataBase.Exec(ctx, query, userId)
 	return err

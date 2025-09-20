@@ -1,11 +1,9 @@
 package main
 
-import (
-	"subscription/internal"
-)
+import "subscription/internal/database"
 
 func main() {
 
-	db := internal.NewDBConnection()
+	db := database.NewDBConnection()
 	defer db.Close()
 }
