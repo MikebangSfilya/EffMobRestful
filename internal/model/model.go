@@ -4,6 +4,7 @@ package model
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -11,18 +12,45 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type CustomDate struct {
+	time.Time
+}
+
+// MarshalJSON реализует кастомный формат JSON "01-2006"
+func (cd CustomDate) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + cd.Format("01-2006") + `"`), nil
+}
+
+// UnmarshalJSON парсит дату из формата "01-2006"
+func (cd *CustomDate) UnmarshalJSON(b []byte) error {
+	s := string(b)
+	s = s[1 : len(s)-1]
+	t, err := time.Parse("01-2006", s)
+	if err != nil {
+		return err
+	}
+	cd.Time = t
+	return nil
+}
+
+func nullableDate(cd *CustomDate) interface{} {
+	if cd == nil {
+		return nil
+	}
+	return cd.Time
+}
+
 // Subscription хранит запись о подписке.
 // Все поля с большой буквы для экспорта в JSON.
 type Subscription struct {
-	ServiceName string  `json:"service_name"`
-	Price       int     `json:"price"`
-	UserId      string  `json:"user_id"`
-	StartDate   string  `json:"start_date"`
-	EndDate     *string `json:"end_date,omitempty"`
+	ServiceName string      `json:"service_name"`
+	Price       int         `json:"price"`
+	UserId      string      `json:"user_id"`
+	StartDate   CustomDate  `json:"start_date"`
+	EndDate     *CustomDate `json:"end_date,omitempty"`
 }
 
-// SubscriptionStore хранит слайс и мапу объектов Subscription.
-// Можно использовать для хранения и работы с множеством подписок.
+// SubscriptionStore хранит подключение к базе данных
 type SubscriptionStore struct {
 	dataBase *pgxpool.Pool // база данных
 }
@@ -36,7 +64,7 @@ func NewSubscription(serviceName string, price int) Subscription {
 		ServiceName: serviceName,
 		Price:       price,
 		UserId:      userId.String(),
-		StartDate:   startedDate.Format("01-2006"),
+		StartDate:   CustomDate{Time: startedDate},
 	}
 
 }
@@ -53,25 +81,37 @@ func (sub *SubscriptionStore) AddSub(ctx context.Context, subscription Subscript
 	query := `
 		INSERT 
 		INTO subscription 
-		(user_id, service_name, price, start_date)
-		VALUES ($1, $2, $3, $4)
+		(user_id, service_name, price, start_date, end_date)
+		VALUES ($1, $2, $3, $4, $5)
 	`
-
-	_, err := sub.dataBase.Exec(ctx, query, subscription.UserId, subscription.ServiceName, subscription.Price, subscription.StartDate)
+	_, err := sub.dataBase.Exec(
+		ctx,
+		query,
+		subscription.UserId,
+		subscription.ServiceName,
+		subscription.Price,
+		subscription.StartDate.Time,
+		nullableDate(subscription.EndDate))
 	return err
 }
 
 func (sub *SubscriptionStore) GetSubInfo(ctx context.Context, userId string) (Subscription, error) {
 
 	query := `
-	SELECT user_id, service_name, price, start_date 
+	SELECT user_id, service_name, price, start_date, end_date
 	FROM subscription
 	WHERE user_id=$1
 	`
 	var s Subscription
+	var startDate time.Time
+	var endDate sql.NullTime
 
-	if err := sub.dataBase.QueryRow(ctx, query, userId).Scan(&s.UserId, &s.ServiceName, &s.Price, &s.StartDate); err != nil {
+	if err := sub.dataBase.QueryRow(ctx, query, userId).Scan(&s.UserId, &s.ServiceName, &s.Price, &startDate, &endDate); err != nil {
 		return Subscription{}, err
+	}
+	s.StartDate = CustomDate{Time: startDate}
+	if endDate.Valid {
+		s.EndDate = &CustomDate{Time: endDate.Time}
 	}
 
 	return s, nil
@@ -80,7 +120,7 @@ func (sub *SubscriptionStore) GetSubInfo(ctx context.Context, userId string) (Su
 func (sub *SubscriptionStore) GetSubAllInfo(ctx context.Context) ([]Subscription, error) {
 
 	query := `
-	SELECT user_id, service_name, price, start_date 
+	SELECT user_id, service_name, price, start_date, end_date
 	FROM subscription 
 	`
 	rows, err := sub.dataBase.Query(ctx, query)
@@ -90,11 +130,19 @@ func (sub *SubscriptionStore) GetSubAllInfo(ctx context.Context) ([]Subscription
 	defer rows.Close()
 
 	var subs []Subscription
+	var startDate time.Time
+	var endDate sql.NullTime
+
 	for rows.Next() {
 		var sub Subscription
-		if err := rows.Scan(&sub.UserId, &sub.ServiceName, &sub.Price, &sub.StartDate); err != nil {
+		if err := rows.Scan(&sub.UserId, &sub.ServiceName, &sub.Price, &startDate, &endDate); err != nil {
 			return nil, err
 		}
+		sub.StartDate = CustomDate{Time: startDate}
+		if endDate.Valid {
+			sub.EndDate = &CustomDate{Time: endDate.Time}
+		}
+
 		subs = append(subs, sub)
 	}
 	return subs, nil
@@ -116,7 +164,13 @@ func (sub *SubscriptionStore) UpdateSub(ctx context.Context, userId string, newS
 		SET service_name=$1, price=$2, start_date=$3 
 		WHERE user_id=$4
 	`
-	cmd, err := sub.dataBase.Exec(ctx, query, newSub.ServiceName, newSub.Price, newSub.StartDate, userId)
+	cmd, err := sub.dataBase.Exec(
+		ctx,
+		query,
+		newSub.ServiceName,
+		newSub.Price,
+		newSub.StartDate.Time,
+		userId)
 	if err != nil {
 		return err
 	}
@@ -126,19 +180,20 @@ func (sub *SubscriptionStore) UpdateSub(ctx context.Context, userId string, newS
 	return nil
 }
 
-func (sub *SubscriptionStore) SumSubscriptions(ctx context.Context, userId, serviceName, from, to string) (int, error) {
-
+func (sub *SubscriptionStore) SumSubscriptions(ctx context.Context, userId, serviceName string, from, to CustomDate) (int, error) {
 	query := `
-        SELECT SUM(price) 
-        FROM subscription
-        WHERE ($1='' OR user_id=$1)
-          AND ($2='' OR service_name=$2)
-          AND start_date >= $3 AND start_date <= $4
-    `
+		SELECT SUM(price) 
+		FROM subscription
+		WHERE ($1='' OR user_id=$1)
+		  AND ($2='' OR service_name=$2)
+		  AND start_date >= $3 AND start_date <= $4
+	`
 	var sum int
-
-	err := sub.dataBase.QueryRow(ctx, query, userId, serviceName, from, to).Scan(&sum)
-
+	err := sub.dataBase.QueryRow(
+		ctx,
+		query,
+		userId,
+		serviceName,
+		from.Time, to.Time).Scan(&sum)
 	return sum, err
-
 }

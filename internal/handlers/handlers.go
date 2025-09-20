@@ -154,13 +154,12 @@ func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	oldSub, _ := h.subscriptionStore.GetSubInfo(ctx, userId)
-	if (oldSub == model.Subscription{}) {
-		log.Printf("subscription not found")
-		datatransfer.WriteError(w, "not found", http.StatusNotFound)
+	oldSub, err := h.subscriptionStore.GetSubInfo(ctx, userId)
+	if err != nil {
+		log.Printf("unable to create, error is: %v", err)
+		datatransfer.WriteError(w, "unable to create", http.StatusInternalServerError)
 		return
 	}
-
 	updatedSub := model.Subscription{
 		ServiceName: dto.ServiceName,
 		Price:       dto.Price,
@@ -179,6 +178,9 @@ func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Requ
 		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+	log.Printf("subscription update succefully")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(updatedSub)
 }
 
 // HandleSumInfo godoc
@@ -199,10 +201,28 @@ func (h *HTTPHandlers) HandleSumInfo(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.URL.Query().Get("id")
 	serviceName := r.URL.Query().Get("service_name")
-	from := r.URL.Query().Get("from")
-	to := r.URL.Query().Get("to")
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
 
-	sum, err := h.subscriptionStore.SumSubscriptions(ctx, userID, serviceName, from, to)
+	// Проверка обязательных параметров
+	if fromStr == "" || toStr == "" {
+		datatransfer.WriteError(w, "missing 'from' or 'to' query parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Парсим даты в CustomDate
+	var fromDate, toDate model.CustomDate
+	if err := fromDate.UnmarshalJSON([]byte(`"` + fromStr + `"`)); err != nil {
+		datatransfer.WriteError(w, "invalid 'from' date format", http.StatusBadRequest)
+		return
+	}
+	if err := toDate.UnmarshalJSON([]byte(`"` + toStr + `"`)); err != nil {
+		datatransfer.WriteError(w, "invalid 'to' date format", http.StatusBadRequest)
+		return
+	}
+
+	// Получаем сумму
+	sum, err := h.subscriptionStore.SumSubscriptions(ctx, userID, serviceName, fromDate, toDate)
 	if err != nil {
 		log.Printf("failed to calculate sum: %v", err)
 		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
@@ -218,5 +238,5 @@ func (h *HTTPHandlers) HandleSumInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("subscription sum calculated successfully: user_id=%s service_name=%s from=%s to=%s sum=%d",
-		userID, serviceName, from, to, sum)
+		userID, serviceName, fromStr, toStr, sum)
 }
