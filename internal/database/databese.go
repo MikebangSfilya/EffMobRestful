@@ -10,7 +10,7 @@ import (
 
 func NewDBConnection() *pgxpool.Pool {
 	connStr := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_HOST"),
@@ -23,6 +23,8 @@ func NewDBConnection() *pgxpool.Pool {
 		panic(fmt.Sprintf("unable to connect to database: %v", err))
 	}
 	fmt.Println("Connection to DataBase succefully")
+	fmt.Println("DB_USER:", os.Getenv("DB_USER"))
+	fmt.Println("DB_PASSWORD:", os.Getenv("DB_PASSWORD"))
 
 	return dbpool
 }
