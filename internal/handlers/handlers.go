@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
 	datatransfer "subscription/internal/dto"
 	"subscription/internal/model"
 
@@ -179,7 +180,7 @@ func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Requ
 		return
 	}
 	log.Printf("subscription update succefully")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(updatedSub)
 }
 
@@ -239,4 +240,17 @@ func (h *HTTPHandlers) HandleSumInfo(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("subscription sum calculated successfully: user_id=%s service_name=%s from=%s to=%s sum=%d",
 		userID, serviceName, fromStr, toStr, sum)
+}
+
+func (h *HTTPHandlers) HandleTest(w http.ResponseWriter, r *http.Request) {
+
+	Succes := model.NewSubscription("Yandex", 400)
+
+	if err := json.NewEncoder(w).Encode(Succes); err != nil {
+		log.Printf("failed to encode %v", err)
+		datatransfer.WriteError(w, "ailed to encode", http.StatusInternalServerError)
+		return
+	}
+	log.Printf(" successfully")
+
 }

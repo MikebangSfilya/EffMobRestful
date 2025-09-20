@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"subscription/internal/handlers"
 
 	"github.com/gorilla/mux"
@@ -20,9 +21,13 @@ func NewHTTPServer(httpHandlers *handlers.HTTPHandlers) *HTTPServer {
 }
 
 func (s *HTTPServer) StartServer() error {
+
+	port := os.Getenv("SERVER_PORT")
+
 	r := mux.NewRouter()
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleSubscribe).Methods("POST")
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleGetAllInfoSubscribe).Methods("GET")
+	r.HandleFunc("/test", s.httpHandlers.HandleTest).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleGetInfoSubscribe).Methods("GET")
 	r.HandleFunc("/subscriptions/sum", s.httpHandlers.HandleSumInfo).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleDeleteSubscribe).Methods("DELETE")
@@ -31,5 +36,6 @@ func (s *HTTPServer) StartServer() error {
 	// r.Path("/subscriptions/{id}").Methods("GET").HandlerFunc(s.httpHandlers.HandleGetInfoSubscribe)
 	// r.Path("/subscriptions/{id}").Methods("DELETE").HandlerFunc(s.httpHandlers.HandleDeleteSubscribe)
 	fmt.Println("Start Server")
-	return http.ListenAndServe(":9091", r)
+	fmt.Println("port", port)
+	return http.ListenAndServe(port, r)
 }
