@@ -27,7 +27,6 @@ func (s *HTTPServer) StartServer() error {
 	r := mux.NewRouter()
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleSubscribe).Methods("POST")
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleGetAllInfoSubscribe).Methods("GET")
-	r.HandleFunc("/test", s.httpHandlers.HandleTest).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleGetInfoSubscribe).Methods("GET")
 	r.HandleFunc("/subscriptions/sum", s.httpHandlers.HandleSumInfo).Methods("GET")
 	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleDeleteSubscribe).Methods("DELETE")

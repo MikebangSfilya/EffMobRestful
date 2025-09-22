@@ -1,5 +1,5 @@
 CREATE TABLE subscription (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     service_name TEXT NOT NULL,
     price INT NOT NULL,
     user_id UUID NOT NULL,

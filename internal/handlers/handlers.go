@@ -44,7 +44,12 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subsNew := model.NewSubscription(DTOSubs.ServiceName, DTOSubs.Price)
+	subsNew, err := model.NewSubscription(DTOSubs)
+	if err != nil {
+		log.Printf("error to generate Subscription %v", err)
+		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
 
 	h.subscriptionStore.AddSub(ctx, subsNew)
 
@@ -240,17 +245,4 @@ func (h *HTTPHandlers) HandleSumInfo(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("subscription sum calculated successfully: user_id=%s service_name=%s from=%s to=%s sum=%d",
 		userID, serviceName, fromStr, toStr, sum)
-}
-
-func (h *HTTPHandlers) HandleTest(w http.ResponseWriter, r *http.Request) {
-
-	Succes := model.NewSubscription("Yandex", 400)
-
-	if err := json.NewEncoder(w).Encode(Succes); err != nil {
-		log.Printf("failed to encode %v", err)
-		datatransfer.WriteError(w, "ailed to encode", http.StatusInternalServerError)
-		return
-	}
-	log.Printf(" successfully")
-
 }
