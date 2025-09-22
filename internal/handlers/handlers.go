@@ -2,7 +2,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 
@@ -40,24 +42,30 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 	var DTOSubs datatransfer.DTOSubs
 	if err := json.NewDecoder(r.Body).Decode(&DTOSubs); err != nil {
 		log.Printf("subscription bad request error: %v", err)
-		datatransfer.WriteError(w, "bad request", http.StatusBadRequest)
+		datatransfer.WriteError(w, "invalid json body", http.StatusBadRequest)
 		return
 	}
 
 	subsNew, err := model.NewSubscription(DTOSubs)
 	if err != nil {
-		log.Printf("error to generate Subscription %v", err)
-		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("invalid subscription data: %v", err)
+		datatransfer.WriteError(w, "invalid subscription data", http.StatusBadRequest)
 		return
 	}
 
-	h.subscriptionStore.AddSub(ctx, subsNew)
+	if err := h.subscriptionStore.AddSub(ctx, subsNew); err != nil {
+		log.Printf("failed to insert subscription: %v", err)
+		datatransfer.WriteError(w, "failed to save subscription", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(subsNew); err != nil {
 		log.Printf("failed to encode subscription: %v", err)
-		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
+		datatransfer.WriteError(w, "failed to encode response", http.StatusInternalServerError)
 		return
 	}
+
 	log.Printf("subscription add successfully")
 }
 
@@ -76,14 +84,19 @@ func (h *HTTPHandlers) HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Req
 	ctx := r.Context()
 	subs, err := h.subscriptionStore.GetSubInfo(ctx, idSub)
 	if err != nil {
-		log.Printf("subscription not found for id: %s, error: %v", idSub, err)
-		datatransfer.WriteError(w, "subscription not found", http.StatusNotFound)
+		if errors.Is(err, sql.ErrNoRows) {
+			log.Printf("subscription not found: id=%s", idSub)
+			datatransfer.WriteError(w, "subscription not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("db error while fetching subscription: %v", err)
+		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(subs); err != nil {
 		log.Printf("failed to encode subscription: %v", err)
-		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
+		datatransfer.WriteError(w, "failed to encode subscription", http.StatusInternalServerError)
 		return
 	}
 	log.Printf("subscription retrieved successfully: id=%s", idSub)
@@ -235,7 +248,7 @@ func (h *HTTPHandlers) HandleSumInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := map[string]int{"total_price": sum}
+	resp := datatransfer.SumResponse{TotalPrice: sum}
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		log.Printf("failed to encode sum response: %v", err)

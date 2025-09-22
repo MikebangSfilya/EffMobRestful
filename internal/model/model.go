@@ -179,7 +179,7 @@ func (sub *SubscriptionStore) UpdateSub(ctx context.Context, id string, newSub S
 	query := `
 		UPDATE subscription 
 		SET service_name=$1, price=$2, start_date=$3
-		WHERE id=$5
+		WHERE id=$4
 	`
 	cmd, err := sub.dataBase.Exec(
 		ctx,

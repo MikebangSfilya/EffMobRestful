@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"subscription/internal/handlers"
 
 	"github.com/gorilla/mux"
@@ -23,6 +24,9 @@ func NewHTTPServer(httpHandlers *handlers.HTTPHandlers) *HTTPServer {
 func (s *HTTPServer) StartServer() error {
 
 	port := os.Getenv("SERVER_PORT")
+	if !strings.HasPrefix(port, ":") {
+		port = ":" + port
+	}
 
 	r := mux.NewRouter()
 	r.HandleFunc("/subscriptions", s.httpHandlers.HandleSubscribe).Methods("POST")

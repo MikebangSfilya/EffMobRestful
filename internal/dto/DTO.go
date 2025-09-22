@@ -27,3 +27,7 @@ func WriteError(w http.ResponseWriter, err string, code int) {
 	}
 	json.NewEncoder(w).Encode(resp)
 }
+
+type SumResponse struct {
+	TotalPrice int `json:"total_price"`
+}

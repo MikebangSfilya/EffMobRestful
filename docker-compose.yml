@@ -1,8 +1,9 @@
-version: '3.9' 
+
 
 services:
-  db:
-    image: postgres:16
+  postgres:
+    image: postgres:16-alpine
+    container_name: subscription-db
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -10,25 +11,58 @@ services:
     ports:
       - "${DB_PORT}:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - subscription-network
 
   migrate:
     image: migrate/migrate
+    container_name: subscription-migrate
     volumes:
       - ./migrations:/migrations
     command: [
       "-path", "/migrations",
-      "-database", "postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?sslmode=disable",
+      "-database", "postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable",
       "up"
     ]
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
+    networks:
+      - subscription-network
+
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: subscription-app
+    environment:
+      DB_HOST: postgres 
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-admin}
+      DB_PASSWORD: ${DB_PASSWORD:-1234}
+      DB_NAME: ${DB_NAME:-mydb}
+      SERVER_PORT: ${SERVER_PORT:-9091}
+    ports:
+      - "${SERVER_PORT:-9091}:${SERVER_PORT:-9091}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - subscription-network
+
+networks:
+  subscription-network:
+    driver: bridge
 
 volumes:
-  pgdata:
+  postgres_data:
+    name: subscription_postgres_data
