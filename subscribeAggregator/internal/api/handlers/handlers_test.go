@@ -72,3 +72,35 @@ func TestHandleDelete_Unit(t *testing.T) {
 	}
 
 }
+
+func TestGetAllInfo_Unit(t *testing.T) {
+
+	h := handlers.NewHTTPHandlers(&fakeService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/subscriptions", nil)
+	w := httptest.NewRecorder()
+
+	h.HandleGetAllInfoSubscribe(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusCreated, resp.StatusCode)
+	}
+
+}
+
+func TestGetInfo_Unit(t *testing.T) {
+
+	h := handlers.NewHTTPHandlers(&fakeService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/subscriptions/1", nil)
+	w := httptest.NewRecorder()
+
+	h.HandleGetInfoSubscribe(w, req)
+
+	resp := w.Result()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected status %d, got %d", http.StatusCreated, resp.StatusCode)
+	}
+
+}
