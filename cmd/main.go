@@ -2,10 +2,10 @@ package main
 
 import (
 	"log"
+	"subscription/internal/api/handlers"
+	"subscription/internal/api/server"
 	"subscription/internal/database"
-	"subscription/internal/handlers"
 	"subscription/internal/model"
-	"subscription/internal/server"
 	"subscription/internal/service"
 
 	"github.com/joho/godotenv"

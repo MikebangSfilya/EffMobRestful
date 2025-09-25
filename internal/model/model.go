@@ -6,7 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	datatransfer "subscription/internal/dto"
+	datatransfer "subscription/internal/api/dto"
 	"time"
 
 	"github.com/google/uuid"

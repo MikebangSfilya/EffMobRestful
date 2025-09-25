@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	datatransfer "subscription/internal/dto"
+	datatransfer "subscription/internal/api/dto"
 	"subscription/internal/model"
 	"time"
 )

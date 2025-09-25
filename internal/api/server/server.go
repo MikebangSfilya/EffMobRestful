@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"subscription/internal/handlers"
+	"subscription/internal/api/handlers"
 
 	"github.com/gorilla/mux"
 )

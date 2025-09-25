@@ -1,4 +1,4 @@
-// handlers.go содержит наши http-"ручки"
+// internal/http/handlers/handlers.go
 package handlers
 
 import (
@@ -8,7 +8,7 @@ import (
 	"log"
 	"net/http"
 
-	datatransfer "subscription/internal/dto"
+	datatransfer "subscription/internal/api/dto"
 	"subscription/internal/model"
 	"subscription/internal/service"
 
