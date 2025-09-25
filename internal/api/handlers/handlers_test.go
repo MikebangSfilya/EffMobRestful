@@ -57,17 +57,17 @@ func TestHandleSubscribe_Unit(t *testing.T) {
 
 }
 
-func TestHandleDelete_Unit(t *testing.T) {
+func TestGetInfo_Unit(t *testing.T) {
 
 	h := handlers.NewHTTPHandlers(&fakeService{})
 
-	req := httptest.NewRequest(http.MethodDelete, "/subscriptions/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/subscriptions/1", nil)
 	w := httptest.NewRecorder()
 
-	h.HandleDeleteSubscribe(w, req)
+	h.HandleGetInfoSubscribe(w, req)
 
 	resp := w.Result()
-	if resp.StatusCode != http.StatusNoContent {
+	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected status %d, got %d", http.StatusCreated, resp.StatusCode)
 	}
 
@@ -89,18 +89,22 @@ func TestGetAllInfo_Unit(t *testing.T) {
 
 }
 
-func TestGetInfo_Unit(t *testing.T) {
+func TestHandleDelete_Unit(t *testing.T) {
 
 	h := handlers.NewHTTPHandlers(&fakeService{})
 
-	req := httptest.NewRequest(http.MethodGet, "/subscriptions/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/subscriptions/1", nil)
 	w := httptest.NewRecorder()
 
-	h.HandleGetInfoSubscribe(w, req)
+	h.HandleDeleteSubscribe(w, req)
 
 	resp := w.Result()
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusNoContent {
 		t.Fatalf("expected status %d, got %d", http.StatusCreated, resp.StatusCode)
 	}
+
+}
+
+func TestHandleUpdateSubscribe_Unit(t *testing.T) {
 
 }
