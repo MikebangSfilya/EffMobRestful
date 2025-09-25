@@ -10,6 +10,7 @@ import (
 
 	datatransfer "subscription/internal/dto"
 	"subscription/internal/model"
+	"subscription/internal/service"
 
 	"github.com/gorilla/mux"
 )
@@ -24,10 +25,10 @@ type HTTPRepository interface {
 }
 
 type HTTPHandlers struct {
-	subscriptionStore model.SubscriptionRepository
+	subscriptionStore service.ServiceRepository
 }
 
-func NewHTTPHandlers(subscriptionStore *model.SubscriptionStore) *HTTPHandlers {
+func NewHTTPHandlers(subscriptionStore service.ServiceRepository) *HTTPHandlers {
 	return &HTTPHandlers{
 		subscriptionStore: subscriptionStore,
 	}
@@ -55,21 +56,16 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	subsNew, err := model.NewSubscription(DTOSubs)
+	sub, err := h.subscriptionStore.Create(ctx, DTOSubs)
 	if err != nil {
-		log.Printf("invalid subscription data: %v", err)
-		datatransfer.WriteError(w, "invalid subscription data", http.StatusBadRequest)
+		log.Printf("subscription bad request error: %v", err)
+		datatransfer.WriteError(w, "invalid json body", http.StatusBadRequest)
 		return
 	}
 
-	if err := h.subscriptionStore.AddSub(ctx, subsNew); err != nil {
-		log.Printf("failed to insert subscription: %v", err)
-		datatransfer.WriteError(w, "failed to save subscription", http.StatusInternalServerError)
-		return
-	}
 	w.WriteHeader(http.StatusCreated)
 
-	if err := json.NewEncoder(w).Encode(subsNew); err != nil {
+	if err := json.NewEncoder(w).Encode(sub); err != nil {
 		log.Printf("failed to encode subscription: %v", err)
 		datatransfer.WriteError(w, "failed to encode response", http.StatusInternalServerError)
 		return
@@ -91,7 +87,8 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 func (h *HTTPHandlers) HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Request) {
 	idSub := mux.Vars(r)["id"]
 	ctx := r.Context()
-	subs, err := h.subscriptionStore.GetSubInfo(ctx, idSub)
+
+	subs, err := h.subscriptionStore.GetInfo(ctx, idSub)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Printf("subscription not found: id=%s", idSub)
@@ -121,12 +118,14 @@ func (h *HTTPHandlers) HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Req
 // @Router       /subscriptions [get]
 func (h *HTTPHandlers) HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	subs, err := h.subscriptionStore.GetSubAllInfo(ctx)
+
+	subs, err := h.subscriptionStore.GetAll(ctx)
 	if err != nil {
 		log.Printf("failed to get subs info: %v", err)
 		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+
 	if err := json.NewEncoder(w).Encode(subs); err != nil {
 		log.Printf("failed to encode subscription: %v", err)
 		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
@@ -149,7 +148,7 @@ func (h *HTTPHandlers) HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.
 func (h *HTTPHandlers) HandleDeleteSubscribe(w http.ResponseWriter, r *http.Request) {
 	idSub := mux.Vars(r)["id"]
 	ctx := r.Context()
-	if err := h.subscriptionStore.DeleteInfo(ctx, idSub); err != nil {
+	if err := h.subscriptionStore.Delete(ctx, idSub); err != nil {
 		log.Printf("internal server error: %v", err)
 		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
 		return
@@ -184,22 +183,10 @@ func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	oldSub, err := h.subscriptionStore.GetSubInfo(ctx, userId)
+	updatedSub, err := h.subscriptionStore.Update(ctx, userId, dto)
 	if err != nil {
-		log.Printf("unable to create, error is: %v", err)
-		datatransfer.WriteError(w, "unable to create", http.StatusInternalServerError)
-		return
-	}
-	updatedSub := model.Subscription{
-		ServiceName: dto.ServiceName,
-		Price:       dto.Price,
-		UserId:      oldSub.UserId,
-		StartDate:   oldSub.StartDate,
-	}
-
-	if err := h.subscriptionStore.UpdateSub(ctx, userId, updatedSub); err != nil {
-		log.Printf("failed to update subscription:")
-		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)
+		log.Printf("failed to update subscription: %v", err)
+		datatransfer.WriteError(w, "failed to update subscription", http.StatusInternalServerError)
 		return
 	}
 
@@ -251,7 +238,7 @@ func (h *HTTPHandlers) HandleSumInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Получаем сумму
-	sum, err := h.subscriptionStore.SumSubscriptions(ctx, userID, serviceName, fromDate, toDate)
+	sum, err := h.subscriptionStore.Sum(ctx, userID, serviceName, fromDate.Time, toDate.Time)
 	if err != nil {
 		log.Printf("failed to calculate sum: %v", err)
 		datatransfer.WriteError(w, "internal server error", http.StatusInternalServerError)

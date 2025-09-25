@@ -6,6 +6,7 @@ import (
 	"subscription/internal/handlers"
 	"subscription/internal/model"
 	"subscription/internal/server"
+	"subscription/internal/service"
 
 	"github.com/joho/godotenv"
 )
@@ -19,7 +20,8 @@ func main() {
 	db := database.NewDBConnection()
 	defer db.Close()
 	store := model.NewSubStore(db)
-	h := handlers.NewHTTPHandlers(store)
+	serv := service.NewService(store)
+	h := handlers.NewHTTPHandlers(serv)
 	srv := server.NewHTTPServer(h)
 	if err := srv.StartServer(); err != nil {
 		log.Printf("Internal Server problem %v", err)
