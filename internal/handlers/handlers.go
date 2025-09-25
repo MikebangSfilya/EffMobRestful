@@ -14,8 +14,17 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type HTTPRepository interface {
+	HandleSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleDeleteSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleUpdateSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleSumInfo(w http.ResponseWriter, r *http.Request)
+}
+
 type HTTPHandlers struct {
-	subscriptionStore *model.SubscriptionStore
+	subscriptionStore model.SubscriptionRepository
 }
 
 func NewHTTPHandlers(subscriptionStore *model.SubscriptionStore) *HTTPHandlers {
@@ -165,7 +174,9 @@ func (h *HTTPHandlers) HandleDeleteSubscribe(w http.ResponseWriter, r *http.Requ
 // @Router       /subscriptions/{id} [put]
 func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
 	userId := mux.Vars(r)["id"]
+
 	var dto datatransfer.DTOSubs
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
 		log.Printf("subscription bad request error: %v", err)
@@ -199,7 +210,6 @@ func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Requ
 	}
 	log.Printf("subscription update succefully")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(updatedSub)
 }
 
 // HandleSumInfo godoc

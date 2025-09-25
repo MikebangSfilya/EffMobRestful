@@ -12,10 +12,10 @@ import (
 
 // Структура для работы с нашими хендлерами
 type HTTPServer struct {
-	httpHandlers *handlers.HTTPHandlers
+	httpHandlers handlers.HTTPRepository
 }
 
-func NewHTTPServer(httpHandlers *handlers.HTTPHandlers) *HTTPServer {
+func NewHTTPServer(httpHandlers handlers.HTTPRepository) *HTTPServer {
 	return &HTTPServer{
 		httpHandlers: httpHandlers,
 	}

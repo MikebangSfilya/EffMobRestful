@@ -41,6 +41,15 @@ func nullableDate(cd *CustomDate) interface{} {
 	return cd.Time
 }
 
+type SubscriptionRepository interface {
+	AddSub(ctx context.Context, sub Subscription) error
+	GetSubInfo(ctx context.Context, id string) (Subscription, error)
+	GetSubAllInfo(ctx context.Context) ([]Subscription, error)
+	DeleteInfo(ctx context.Context, id string) error
+	UpdateSub(ctx context.Context, id string, sub Subscription) error
+	SumSubscriptions(ctx context.Context, userId, serviceName string, from, to CustomDate) (int, error)
+}
+
 // Subscription хранит запись о подписке.
 // Все поля с большой буквы для экспорта в JSON.
 type Subscription struct {

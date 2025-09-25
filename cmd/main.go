@@ -19,9 +19,9 @@ func main() {
 	db := database.NewDBConnection()
 	defer db.Close()
 	store := model.NewSubStore(db)
-	handlers := handlers.NewHTTPHandlers(store)
-	server := server.NewHTTPServer(handlers)
-	if err := server.StartServer(); err != nil {
+	h := handlers.NewHTTPHandlers(store)
+	srv := server.NewHTTPServer(h)
+	if err := srv.StartServer(); err != nil {
 		log.Printf("Internal Server problem %v", err)
 		return
 	}
