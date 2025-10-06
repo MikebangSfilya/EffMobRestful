@@ -4,7 +4,6 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-%234169E1)](https://www.postgresql.org)
 [![Docker](https://img.shields.io/badge/Docker-✔-2496ED)](https://docker.com)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/MikebangSfilya/subscription)](https://goreportcard.com/report/github.com/MikebangSfilya/subscription)  # 🆕
 
 Микросервис для управления подписками с REST API интерфейсом.
 
