@@ -1,9 +1,10 @@
 # Subscription Service
 
-![Go](https://img.shields.io/badge/Go-1.24-blue)
-![Postgres](https://img.shields.io/badge/PostgreSQL-16-%234169E1)
-![Docker](https://img.shields.io/badge/Docker-✔-2496ED)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![Go](https://img.shields.io/badge/Go-1.24-blue)](https://golang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-%234169E1)](https://www.postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-✔-2496ED)](https://docker.com)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/MikebangSfilya/subscription)](https://goreportcard.com/report/github.com/MikebangSfilya/subscription)  # 🆕
 
 Микросервис для управления подписками с REST API интерфейсом.
 
@@ -51,18 +52,36 @@
 ```text
 subscription/
 ├── cmd/
-│   └── main.go              # Точка входа
+│   └── main.go                 # Точка входа
+├── docs           
+│   ├── swagger.json                
+│   └── swagger.yaml           
 ├── internal/
-│   ├── database/            # Подключение к БД
-│   ├── handlers/            # HTTP обработчики
-│   ├── model/               # Модели данных
-│   ├── dto/                 # Data Transfer Objects
-│   └── server/              # HTTP сервер
-├── migrations/              # Миграции БД
-├── docker-compose.yml       # Docker Compose
-├── Dockerfile              # Docker образ
-└── .env           # Пример переменных окружения
+│   ├── api/
+│   │   ├── handlers/           # HTTP обработчики
+│   │   ├── dto/                # Data Transfer Objects  
+│   │   └── server/             # HTTP сервер
+│   ├── database/               # Подключение к БД
+│   └── model/                  # Модели данных (сущности БД)
+├── migrations/                 # Миграции БД
+├── docker-compose.yml          # Docker Compose
+├── Dockerfile                  # Docker образ
+└── .env                        # Переменные окружения
 ```
+##  Быстрый старт
+
+1. Клонировать репозеторий
+```bash
+git clone https://github.com/MikebangSfilya/subscription.git
+cd subscription
+```
+
+2. Запусти через Docker
+```bash
+docker-compose up -d
+```
+3. API будет доступно на http://localhost:9091
+
 
 ##  Docker контейнеры
 
@@ -157,5 +176,6 @@ curl "http://localhost:9091/subscriptions/sum?from=01-2024&to=12-2024"
 - Реализовать уведомления об истекающих подписках
 - Добавить метрики и мониторинг
 - Создать клиентские SDK
-## Лицензия
-MIT © 2025 Mikebang-star
+## 📄 Лицензия
+Этот проект распространяется под лицензией MIT. Подробнее см. в файле [LICENSE](LICENSE).
+Copyright © 2025 [MikebangSfilya](https://github.com/MikebangSfilya)

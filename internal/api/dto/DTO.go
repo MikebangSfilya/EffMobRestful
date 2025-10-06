@@ -1,11 +1,6 @@
 // datatransfer для запроса данных
 package datatransfer
 
-import (
-	"encoding/json"
-	"net/http"
-)
-
 type DTOSubs struct {
 	ServiceName string `json:"service_name"`
 	Price       int    `json:"price"`
@@ -19,15 +14,23 @@ type ErrorResponse struct {
 	Code  int    `json:"code"`
 }
 
-func WriteError(w http.ResponseWriter, err string, code int) {
-	w.WriteHeader(code)
-	resp := ErrorResponse{
-		Error: err,
-		Code:  code,
-	}
-	json.NewEncoder(w).Encode(resp)
-}
-
 type SumResponse struct {
 	TotalPrice int `json:"total_price"`
+}
+
+func (d DTOSubs) Validate() error {
+	if d.ServiceName == "" {
+		return ErrServiceName
+	}
+	if d.Price < 0 {
+		return ErrPriceNegative
+	}
+	if d.UserId == "" {
+		return ErrUserIDRequired
+	}
+	if d.StartDate == "" {
+		return ErrStartDate
+	}
+	return nil
+
 }
