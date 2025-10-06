@@ -55,6 +55,12 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := DTOSubs.Validate(); err != nil {
+		log.Printf("validate error: %v", err)
+		datatransfer.WriteError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	sub, err := h.subscriptionStore.Create(ctx, DTOSubs)
 	if err != nil {
 		log.Printf("subscription bad request error: %v", err)

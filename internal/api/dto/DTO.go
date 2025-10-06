@@ -20,16 +20,16 @@ type SumResponse struct {
 
 func (d DTOSubs) Validate() error {
 	if d.ServiceName == "" {
-		return ErrServiceName
+		return errServiceName
 	}
 	if d.Price < 0 {
-		return ErrPriceNegative
+		return errPriceNegative
 	}
 	if d.UserId == "" {
-		return ErrUserIDRequired
+		return errUserIDRequired
 	}
 	if d.StartDate == "" {
-		return ErrStartDate
+		return errStartDate
 	}
 	return nil
 

@@ -7,12 +7,12 @@ import (
 )
 
 var (
-	ErrValidation     = errors.New("validation error")
-	ErrServiceName    = errors.New("service name is required")
-	ErrPriceNegative  = errors.New("price cannot be negative")
-	ErrUserIDRequired = errors.New("user ID is required")
-	ErrStartDate      = errors.New("start date is required")
-	ErrInvalidDate    = errors.New("invalid date format")
+	errValidation     = errors.New("validation error")
+	errServiceName    = errors.New("service name is required")
+	errPriceNegative  = errors.New("price cannot be negative")
+	errUserIDRequired = errors.New("user ID is required")
+	errStartDate      = errors.New("start date is required")
+	errInvalidDate    = errors.New("invalid date format")
 )
 
 func WriteError(w http.ResponseWriter, err string, code int) {
