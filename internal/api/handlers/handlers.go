@@ -11,7 +11,7 @@ import (
 	"subscription/internal/model"
 	"subscription/internal/service"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 type HTTPRepository interface {
@@ -88,7 +88,7 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 // @Failure      500  {object}  datatransfer.ErrorResponse
 // @Router       /subscriptions/{id} [get]
 func (h *HTTPHandlers) HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Request) {
-	idSub := mux.Vars(r)["id"]
+	idSub := chi.URLParam(r, "id")
 	ctx := r.Context()
 
 	subs, err := h.subscriptionStore.GetInfo(ctx, idSub)
@@ -145,7 +145,7 @@ func (h *HTTPHandlers) HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.
 // @Failure      500  {object}  datatransfer.ErrorResponse
 // @Router       /subscriptions/{id} [delete]
 func (h *HTTPHandlers) HandleDeleteSubscribe(w http.ResponseWriter, r *http.Request) {
-	idSub := mux.Vars(r)["id"]
+	idSub := chi.URLParam(r, "id")
 	ctx := r.Context()
 	if err := h.subscriptionStore.Delete(ctx, idSub); err != nil {
 		log.Printf("internal server error: %v", err)
@@ -173,7 +173,7 @@ func (h *HTTPHandlers) HandleDeleteSubscribe(w http.ResponseWriter, r *http.Requ
 func (h *HTTPHandlers) HandleUpdateSubscribe(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	userId := mux.Vars(r)["id"]
+	userId := chi.URLParam(r, "id")
 
 	var dto datatransfer.DTOSubs
 	if err := readJSON(r, &dto); err != nil {

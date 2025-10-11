@@ -25,6 +25,7 @@ func NewService(subStore model.SubscriptionRepository) *ServiceStore {
 		subscriptionStore: subStore,
 	}
 }
+
 func (s *ServiceStore) Create(ctx context.Context, dto datatransfer.DTOSubs) (model.Subscription, error) {
 
 	sub, err := model.NewSubscription(dto)

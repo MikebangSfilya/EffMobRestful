@@ -9,11 +9,6 @@ type DTOSubs struct {
 	EndDate     string `json:"end_date,omitempty"`
 }
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-	Code  int    `json:"code"`
-}
-
 type SumResponse struct {
 	TotalPrice int `json:"total_price"`
 }

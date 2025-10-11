@@ -7,7 +7,7 @@ import (
 	"strings"
 	"subscription/internal/api/handlers"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 // Структура для работы с нашими хендлерами
@@ -28,13 +28,13 @@ func (s *HTTPServer) StartServer() error {
 		port = ":" + port
 	}
 
-	r := mux.NewRouter()
-	r.HandleFunc("/subscriptions", s.httpHandlers.HandleSubscribe).Methods("POST")
-	r.HandleFunc("/subscriptions", s.httpHandlers.HandleGetAllInfoSubscribe).Methods("GET")
-	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleGetInfoSubscribe).Methods("GET")
-	r.HandleFunc("/subscriptions/sum", s.httpHandlers.HandleSumInfo).Methods("GET")
-	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleDeleteSubscribe).Methods("DELETE")
-	r.HandleFunc("/subscriptions/{id}", s.httpHandlers.HandleUpdateSubscribe).Methods("PUT")
+	r := chi.NewRouter()
+	r.Post("/subscriptions", s.httpHandlers.HandleSubscribe)
+	r.Get("/subscriptions", s.httpHandlers.HandleGetAllInfoSubscribe)
+	r.Get("/subscriptions/{id}", s.httpHandlers.HandleGetInfoSubscribe)
+	r.Get("/subscriptions/sum", s.httpHandlers.HandleSumInfo)
+	r.Delete("/subscriptions/{id}", s.httpHandlers.HandleDeleteSubscribe)
+	r.Put("/subscriptions/{id}", s.httpHandlers.HandleUpdateSubscribe)
 	fmt.Println("Start Server")
 	fmt.Println("port", port)
 	return http.ListenAndServe(port, r)

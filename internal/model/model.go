@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"errors"
 	datatransfer "subscription/internal/api/dto"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -64,6 +65,7 @@ type Subscription struct {
 // SubscriptionStore хранит подключение к базе данных
 type SubscriptionStore struct {
 	dataBase *pgxpool.Pool // база данных
+	mu       sync.Mutex
 }
 
 // NewSubscription создает новый объект Subscription с уникальным ID
@@ -103,6 +105,8 @@ func NewSubStore(dataBase *pgxpool.Pool) *SubscriptionStore {
 
 // AddSub используется для добавления нашей подписки в хранилище(Store)
 func (sub *SubscriptionStore) AddSub(ctx context.Context, subscription Subscription) error {
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
 	query := `
 		INSERT 
 		INTO subscription 
@@ -122,6 +126,8 @@ func (sub *SubscriptionStore) AddSub(ctx context.Context, subscription Subscript
 }
 
 func (sub *SubscriptionStore) GetSubInfo(ctx context.Context, Id string) (Subscription, error) {
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
 
 	query := `
 	SELECT id, user_id, service_name, price, start_date, end_date
@@ -144,6 +150,8 @@ func (sub *SubscriptionStore) GetSubInfo(ctx context.Context, Id string) (Subscr
 }
 
 func (sub *SubscriptionStore) GetSubAllInfo(ctx context.Context) ([]Subscription, error) {
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
 
 	query := `
 	SELECT id, user_id, service_name, price, start_date, end_date
@@ -176,6 +184,9 @@ func (sub *SubscriptionStore) GetSubAllInfo(ctx context.Context) ([]Subscription
 
 // Удаление записи из нашей базы данных
 func (sub *SubscriptionStore) DeleteInfo(ctx context.Context, id string) error {
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
+
 	query := `
 	DELETE FROM subscription 
 	WHERE id=$1`
@@ -185,6 +196,9 @@ func (sub *SubscriptionStore) DeleteInfo(ctx context.Context, id string) error {
 
 // Обновление информации из базы данных
 func (sub *SubscriptionStore) UpdateSub(ctx context.Context, id string, newSub Subscription) error {
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
+
 	query := `
 		UPDATE subscription 
 		SET service_name=$1, price=$2, start_date=$3
@@ -208,6 +222,9 @@ func (sub *SubscriptionStore) UpdateSub(ctx context.Context, id string, newSub S
 
 // Метод для подсчета суммарной стоимости всех подписок за выбранный период
 func (sub *SubscriptionStore) SumSubscriptions(ctx context.Context, userId, serviceName string, from, to CustomDate) (int, error) {
+	sub.mu.Lock()
+	defer sub.mu.Unlock()
+
 	query := `
 		SELECT SUM(price) 
 		FROM subscription

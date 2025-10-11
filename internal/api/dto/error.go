@@ -7,13 +7,17 @@ import (
 )
 
 var (
-	errValidation     = errors.New("validation error")
 	errServiceName    = errors.New("service name is required")
 	errPriceNegative  = errors.New("price cannot be negative")
 	errUserIDRequired = errors.New("user ID is required")
 	errStartDate      = errors.New("start date is required")
 	errInvalidDate    = errors.New("invalid date format")
 )
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+	Code  int    `json:"code"`
+}
 
 func WriteError(w http.ResponseWriter, err string, code int) {
 	w.WriteHeader(code)
