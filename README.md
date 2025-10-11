@@ -20,12 +20,19 @@
 - **Документация API** через Swagger
 ## Технологии
 
-- **Go 1.24** - основной язык программирования 
-- **PostgreSQL** - база данных
-- **Docker & Docker Compose** - контейнеризация
-- **Gorilla Mux** - HTTP роутинг
-- **pgx** - драйвер PostgreSQL
-- **Migrate** - миграции базы данных
+### **Backend**
+- **Go 1.24** - основной язык 
+- **Chi Router** - высокопроизводительный HTTP роутер
+- **Swagger** - автоматическая документация API
+
+### **Data Layer** 
+- **PostgreSQL 16** - реляционная база данных
+- **pgx/pgxpool** - драйвер PostgreSQL с пулом соединений
+
+### **Infrastructure**
+- **Docker & Docker Compose** - контейнеризация и оркестрация
+- **Database Migrations** 
+- **Environment Configuration** - управление настройками через переменные окружения
 
 ##  API Endpoints
 
@@ -34,11 +41,12 @@
 - `POST /subscriptions` - Создать новую подписку
 - `GET /subscriptions` - Получить все подписки
 - `GET /subscriptions/{id}` - Получить подписку по ID
-- `PUT /subscriptions/{id}` - Обновить подписки
+- `PUT /subscriptions/{id}` - Обновить подписку
 - `DELETE /subscriptions/{id}` - Удалить подписку
 ### Расчеты
 
 - `GET /subscriptions/sum` - Подсчет суммарной стоимости подписок
+
 #### Параметры для расчета суммы:
 
 - `id` (опционально) - фильтр по пользователю
@@ -69,7 +77,7 @@ subscription/
 ```
 ##  Быстрый старт
 
-1. Клонировать репозеторий
+1. Клонировать репозиторий
 ```bash
 git clone https://github.com/MikebangSfilya/subscription.git
 cd subscription
