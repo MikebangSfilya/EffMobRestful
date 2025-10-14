@@ -152,7 +152,7 @@ curl -X POST http://localhost:9091/subscriptions \
   -d '{
     "service_name": "Netflix",
     "price": 599,
-    "user_id": "user123",
+    "user_id": "a37a0327-99af-4e62-8b33-55dc3863cdc6",
     "start_date": "01-2024"
   }'
 ```
@@ -160,7 +160,6 @@ curl -X POST http://localhost:9091/subscriptions \
 ### Расчет суммы подписок
 
 ```bash
-
 curl "http://localhost:9091/subscriptions/sum?from=01-2024&to=12-2024"
 ```
 

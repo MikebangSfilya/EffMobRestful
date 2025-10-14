@@ -1,6 +1,8 @@
 // datatransfer для запроса данных
 package datatransfer
 
+import "github.com/google/uuid"
+
 type DTOSubs struct {
 	ServiceName string `json:"service_name"`
 	Price       int    `json:"price"`
@@ -14,6 +16,11 @@ type SumResponse struct {
 }
 
 func (d DTOSubs) Validate() error {
+
+	_, err := uuid.Parse(d.UserId)
+	if err != nil {
+		return errNoUUID
+	}
 	if d.ServiceName == "" {
 		return errServiceName
 	}
@@ -26,6 +33,7 @@ func (d DTOSubs) Validate() error {
 	if d.StartDate == "" {
 		return errStartDate
 	}
+
 	return nil
 
 }

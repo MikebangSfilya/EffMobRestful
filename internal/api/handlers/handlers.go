@@ -2,32 +2,33 @@
 package handlers
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
 	datatransfer "subscription/internal/api/dto"
 	"subscription/internal/model"
-	"subscription/internal/service"
 
 	"github.com/go-chi/chi/v5"
 )
 
-type HTTPRepository interface {
-	HandleSubscribe(w http.ResponseWriter, r *http.Request)
-	HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Request)
-	HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.Request)
-	HandleDeleteSubscribe(w http.ResponseWriter, r *http.Request)
-	HandleUpdateSubscribe(w http.ResponseWriter, r *http.Request)
-	HandleSumInfo(w http.ResponseWriter, r *http.Request)
+type ServiceRepository interface {
+	Create(ctx context.Context, dto datatransfer.DTOSubs) (model.Subscription, error)
+	GetInfo(ctx context.Context, idSub string) (model.Subscription, error)
+	GetAll(ctx context.Context) ([]model.Subscription, error)
+	Delete(ctx context.Context, idSub string) error
+	Update(ctx context.Context, id string, dto datatransfer.DTOSubs) (model.Subscription, error)
+	Sum(ctx context.Context, userId, serviceName string, from, to time.Time) (int, error)
 }
 
 type HTTPHandlers struct {
-	subscriptionStore service.ServiceRepository
+	subscriptionStore ServiceRepository
 }
 
-func NewHTTPHandlers(subscriptionStore service.ServiceRepository) *HTTPHandlers {
+func NewHTTPHandlers(subscriptionStore ServiceRepository) *HTTPHandlers {
 	return &HTTPHandlers{
 		subscriptionStore: subscriptionStore,
 	}
@@ -50,6 +51,7 @@ func (h *HTTPHandlers) HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 
 	var DTOSubs datatransfer.DTOSubs
 	if err := readJSON(r, &DTOSubs); err != nil {
+
 		log.Printf("subscription bad request error: %v", err)
 		datatransfer.WriteError(w, "invalid json body", http.StatusBadRequest)
 		return

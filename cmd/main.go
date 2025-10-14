@@ -5,7 +5,7 @@ import (
 	"subscription/internal/api/handlers"
 	"subscription/internal/api/server"
 	"subscription/internal/database"
-	"subscription/internal/model"
+	"subscription/internal/repository"
 	"subscription/internal/service"
 
 	"github.com/joho/godotenv"
@@ -20,9 +20,9 @@ func main() {
 	db := database.NewDBConnection()
 	defer db.Close()
 
-	store := model.NewSubStore(db)
+	repo := repository.NewPgxRepository(db)
 
-	serv := service.NewService(store)
+	serv := service.NewService(repo)
 
 	h := handlers.NewHTTPHandlers(serv)
 

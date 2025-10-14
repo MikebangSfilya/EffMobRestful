@@ -5,17 +5,25 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"subscription/internal/api/handlers"
 
 	"github.com/go-chi/chi/v5"
 )
 
 // Структура для работы с нашими хендлерами
 type HTTPServer struct {
-	httpHandlers handlers.HTTPRepository
+	httpHandlers HTTPRepository
 }
 
-func NewHTTPServer(httpHandlers handlers.HTTPRepository) *HTTPServer {
+type HTTPRepository interface {
+	HandleSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleGetInfoSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleGetAllInfoSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleDeleteSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleUpdateSubscribe(w http.ResponseWriter, r *http.Request)
+	HandleSumInfo(w http.ResponseWriter, r *http.Request)
+}
+
+func NewHTTPServer(httpHandlers HTTPRepository) *HTTPServer {
 	return &HTTPServer{
 		httpHandlers: httpHandlers,
 	}

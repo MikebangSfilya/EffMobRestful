@@ -7,20 +7,20 @@ import (
 	"time"
 )
 
-type ServiceRepository interface {
-	Create(ctx context.Context, dto datatransfer.DTOSubs) (model.Subscription, error)
-	GetInfo(ctx context.Context, idSub string) (model.Subscription, error)
+type SubscriptionRepository interface {
+	Create(ctx context.Context, sub model.Subscription) error
+	GetByID(ctx context.Context, id string) (model.Subscription, error)
 	GetAll(ctx context.Context) ([]model.Subscription, error)
-	Delete(ctx context.Context, idSub string) error
-	Update(ctx context.Context, id string, dto datatransfer.DTOSubs) (model.Subscription, error)
-	Sum(ctx context.Context, userId, serviceName string, from, to time.Time) (int, error)
+	Update(ctx context.Context, id string, sub model.Subscription) error
+	Delete(ctx context.Context, id string) error
+	SumForPeriod(ctx context.Context, userId, serviceName string, from, to time.Time) (int, error)
 }
 
 type ServiceStore struct {
-	subscriptionStore model.SubscriptionRepository
+	subscriptionStore SubscriptionRepository
 }
 
-func NewService(subStore model.SubscriptionRepository) *ServiceStore {
+func NewService(subStore SubscriptionRepository) *ServiceStore {
 	return &ServiceStore{
 		subscriptionStore: subStore,
 	}
@@ -32,7 +32,7 @@ func (s *ServiceStore) Create(ctx context.Context, dto datatransfer.DTOSubs) (mo
 	if err != nil {
 		return model.Subscription{}, err
 	}
-	if err := s.subscriptionStore.AddSub(ctx, sub); err != nil {
+	if err := s.subscriptionStore.Create(ctx, sub); err != nil {
 		return model.Subscription{}, err
 	}
 
@@ -42,7 +42,7 @@ func (s *ServiceStore) Create(ctx context.Context, dto datatransfer.DTOSubs) (mo
 
 func (s *ServiceStore) GetInfo(ctx context.Context, idSub string) (model.Subscription, error) {
 
-	sub, err := s.subscriptionStore.GetSubInfo(ctx, idSub)
+	sub, err := s.subscriptionStore.GetByID(ctx, idSub)
 	if err != nil {
 		return model.Subscription{}, err
 	}
@@ -51,7 +51,7 @@ func (s *ServiceStore) GetInfo(ctx context.Context, idSub string) (model.Subscri
 
 func (s *ServiceStore) GetAll(ctx context.Context) ([]model.Subscription, error) {
 
-	allSub, err := s.subscriptionStore.GetSubAllInfo(ctx)
+	allSub, err := s.subscriptionStore.GetAll(ctx)
 	if err != nil {
 		return []model.Subscription{}, err
 	}
@@ -59,12 +59,12 @@ func (s *ServiceStore) GetAll(ctx context.Context) ([]model.Subscription, error)
 }
 
 func (s *ServiceStore) Delete(ctx context.Context, idSub string) error {
-	return s.subscriptionStore.DeleteInfo(ctx, idSub)
+	return s.subscriptionStore.Delete(ctx, idSub)
 }
 
 func (s *ServiceStore) Update(ctx context.Context, id string, dto datatransfer.DTOSubs) (model.Subscription, error) {
 
-	oldSub, err := s.subscriptionStore.GetSubInfo(ctx, id)
+	oldSub, err := s.subscriptionStore.GetByID(ctx, id)
 	if err != nil {
 		return model.Subscription{}, err
 	}
@@ -75,7 +75,7 @@ func (s *ServiceStore) Update(ctx context.Context, id string, dto datatransfer.D
 		StartDate:   oldSub.StartDate,
 	}
 
-	if err := s.subscriptionStore.UpdateSub(ctx, id, updatedSub); err != nil {
+	if err := s.subscriptionStore.Update(ctx, id, updatedSub); err != nil {
 		return model.Subscription{}, err
 	}
 
@@ -83,7 +83,6 @@ func (s *ServiceStore) Update(ctx context.Context, id string, dto datatransfer.D
 }
 
 func (s *ServiceStore) Sum(ctx context.Context, userId, serviceName string, from, to time.Time) (int, error) {
-	fromCD := model.CustomDate{Time: from}
-	toCD := model.CustomDate{Time: to}
-	return s.subscriptionStore.SumSubscriptions(ctx, userId, serviceName, fromCD, toCD)
+
+	return s.subscriptionStore.SumForPeriod(ctx, userId, serviceName, from, to)
 }
