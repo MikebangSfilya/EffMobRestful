@@ -40,7 +40,7 @@ func NewHTTPHandlers(subscriptionStore ServiceRepository) *HTTPHandlers {
 // @Tags         subscriptions
 // @Accept       json
 // @Produce      json
-// @Param        subscription  body      model.Subscription  true  "Subscription"
+// @Param subscription body datatransfer.DTOSubs true "Subscription"
 // @Success      201  {object}  model.Subscription
 // @Failure      400  {object}  datatransfer.ErrorResponse
 // @Failure      500  {object}  datatransfer.ErrorResponse

@@ -117,6 +117,7 @@ func (sub *pgxRepository) Update(ctx context.Context, id string, newSub model.Su
 		UPDATE subscription 
 		SET service_name=$1, price=$2, start_date=$3
 		WHERE id=$4
+		RETURNING id
 	`
 	cmd, err := sub.db.Exec(
 		ctx,
@@ -138,12 +139,12 @@ func (sub *pgxRepository) Update(ctx context.Context, id string, newSub model.Su
 func (sub *pgxRepository) SumForPeriod(ctx context.Context, userId, serviceName string, from, to time.Time) (int, error) {
 
 	query := `
-		SELECT SUM(price) 
-		FROM subscription
-		WHERE ($1='' OR user_id=$1)
-		  AND ($2='' OR service_name=$2)
-		  AND start_date >= $3 AND start_date <= $4
-	`
+        SELECT SUM(price) 
+        FROM subscription
+        WHERE (user_id = $1 OR $1 = '')
+          AND (service_name = $2 OR $2 = '')
+          AND start_date >= $3 AND start_date <= $4
+    `
 	var sum int
 	err := sub.db.QueryRow(
 		ctx,
